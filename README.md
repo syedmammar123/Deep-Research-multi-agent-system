@@ -1,10 +1,10 @@
-# 🔬 Deep Research AI Web App
+# 🔬 Deep Research Multi AI Agent
 
 A multi-agent deep research system. This application provides a modern, user-friendly way to conduct comprehensive research using AI agents.
 
 ## 🎬 Demo Video
 
-![Demo Video](demo-video-gif.mp4)
+![Demo Video](demo-video.gif)
 
 *Watch the app in action! See how it generates research questions, searches the web, and creates comprehensive reports in just minutes.*
 
