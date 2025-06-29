@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deep Research AI Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Add Marked.js for markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🔬 Deep Research AI</h1>
+            <p>Multi-agent research system powered by AI</p>
+        </header>
+
+        <div class="main-content">
+            <!-- API Keys Section -->
+            <div class="api-section" id="apiSection">
+                <h2>🔑 Configure API Keys</h2>
+                <div class="api-form">
+                    <div class="input-group">
+                        <label for="openaiKey">OpenAI API Key</label>
+                        <input type="password" id="openaiKey" placeholder="sk-..." />
+                    </div>
+                    <div class="input-group">
+                        <label for="tavilyKey">Tavily API Key</label>
+                        <input type="password" id="tavilyKey" placeholder="tvly-..." />
+                    </div>
+                    <button class="btn btn-primary" onclick="setApiKeys()">Save API Keys</button>
+                </div>
+            </div>
+
+            <!-- Research Section -->
+            <div class="research-section" id="researchSection" style="display: none;">
+                <h2>💭 Start Your Research</h2>
+                <div class="research-form">
+                    <div class="input-group">
+                        <label for="researchTopic">Research Topic</label>
+                        <textarea id="researchTopic" placeholder="Enter your research topic here... (e.g., 'temperature of karachi on 24th june 2025')" rows="3"></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="startResearch()" id="startBtn">
+                        <span class="btn-text">Start Research</span>
+                        <span class="btn-loading" style="display: none;">
+                            <div class="spinner"></div>
+                            Researching...
+                        </span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading Section -->
+            <div class="loading-section" id="loadingSection" style="display: none;">
+                <h2>🔍 Research in Progress</h2>
+                <div class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <p class="loading-text">Your AI agents are working hard to research your topic...</p>
+                    <p class="loading-subtext">This may take a few minutes. Please don't close this page.</p>
+                </div>
+                <!-- Intermediate Results Section -->
+                <div class="intermediate-results" id="intermediateResults" style="display: none;">
+                    <h3>📊 Current Progress</h3>
+                    <div class="progress-log" id="intermediateProgressLog"></div>
+                    <div class="intermediate-answers" id="intermediateAnswers"></div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <h2>📋 Research Report</h2>
+                <div class="progress-log" id="progressLog"></div>
+                <div class="results-container" id="resultsContainer"></div>
+                <button class="btn btn-secondary" onclick="resetResearch()">Start New Research</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html> 
