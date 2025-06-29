@@ -8,7 +8,6 @@ A multi-agent deep research system. This application provides a modern, user-fri
 
 *Watch the app in action! See how it generates research questions, searches the web, and creates comprehensive reports in just minutes.*
 
-**Note:** Click the video link above to watch the demo. GitHub will display the video directly in the browser.
 
 ## 🏗️ Architecture Diagram
 
