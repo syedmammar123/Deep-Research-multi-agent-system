@@ -4,7 +4,7 @@ A multi-agent deep research system. This application provides a modern, user-fri
 
 ## 🎬 Demo Video
 
-https://github.com/syedmammar123/Deep-Research-multi-agent-system/blob/main/demo-video.mp4
+![Demo Video](demo-video-gif.mp4)
 
 *Watch the app in action! See how it generates research questions, searches the web, and creates comprehensive reports in just minutes.*
 
