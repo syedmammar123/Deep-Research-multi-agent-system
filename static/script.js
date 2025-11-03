@@ -20,10 +20,10 @@ let intermediateData = {
 
 // API Keys management
 function setApiKeys() {
-    const openaiKey = document.getElementById('openaiKey').value.trim();
+    const groqkey = document.getElementById('groqKey').value.trim();
     const tavilyKey = document.getElementById('tavilyKey').value.trim();
     
-    if (!openaiKey || !tavilyKey) {
+    if (!groqkey || !tavilyKey) {
         showError('Please enter both API keys');
         return;
     }
@@ -34,7 +34,7 @@ function setApiKeys() {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-            openai_api_key: openaiKey,
+            groq_api_key: groqkey,
             tvly_api_key: tavilyKey
         })
     })
