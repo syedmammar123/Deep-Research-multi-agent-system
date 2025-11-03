@@ -1,24 +1,23 @@
 from flask import Flask, render_template, request, jsonify
 import os
 from datetime import datetime
+from dotenv import load_dotenv
+load_dotenv()
 
 # Import your existing research system
-from llama_index.llms.openai import OpenAI
 from llama_index.llms.groq import Groq
-from llama_index.core.agent.workflow import FunctionAgent
 from tavily import TavilyClient
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key-here'
 
-# Global variables to store API keys
-groq_api_key = None
-tvly_api_key = None
+import os
+
+groq_api_key = os.getenv("GROQ_API_KEY")
+tvly_api_key = os.getenv("TVLY_API_KEY")
+
 
 def search_web(query: str) -> str:
     """Useful for using the web to answer questions."""
-    if not tvly_api_key:
-        return "Tavily API key not configured"
     try:
         client = TavilyClient(api_key=tvly_api_key)
         result = client.search(query)
@@ -26,32 +25,19 @@ def search_web(query: str) -> str:
     except Exception as e:
         return f"Search failed: {str(e)}"
 
-@app.route('/')
+
+@app.route("/")
 def index():
-    return render_template('index.html')
+    return render_template("index.html")
 
-@app.route('/set_api_keys', methods=['POST'])
-def set_api_keys():
-    global groq_api_key, tvly_api_key
-    data = request.get_json()
-    tvly_api_key = data.get('tvly_api_key')
-    groq_api_key = data.get("groq_api_key")
 
-    if not tvly_api_key or not groq_api_key:
-        return jsonify({'success': False, 'message': 'Both API keys are required'})
-
-    return jsonify({'success': True, 'message': 'API keys set successfully'})
-
-@app.route('/start_research', methods=['POST'])
+@app.route("/start_research", methods=["POST"])
 def start_research():
     data = request.get_json()
-    topic = data.get('topic')
-
-    if not groq_api_key or not tvly_api_key:
-        return jsonify({'success': False, 'message': 'Please set your API keys first'})
+    topic = data.get("topic")
 
     if not topic:
-        return jsonify({'success': False, 'message': 'Please enter a research topic'})
+        return jsonify({"success": False, "message": "Please enter a research topic"})
 
     try:
         # Initialize LLM
@@ -60,21 +46,27 @@ def start_research():
         progress_log = []
 
         # Step 1: Generate questions
-        progress_log.append(f"[{datetime.now().strftime('%H:%M:%S')}] Starting research on: {topic}")
+        progress_log.append(
+            f"[{datetime.now().strftime('%H:%M:%S')}] Starting research on: {topic}"
+        )
 
         question_prompt = f"""Generate 5-7 specific questions about this topic: {topic}
         Provide the questions one per line. Don't include markdown or any preamble, just a list of questions."""
 
         question_response = llm.complete(question_prompt)
         questions_text = question_response.text
-        questions = [q.strip() for q in questions_text.split('\n') if q.strip()]
+        questions = [q.strip() for q in questions_text.split("\n") if q.strip()]
 
-        progress_log.append(f"[{datetime.now().strftime('%H:%M:%S')}] Generated {len(questions)} questions")
+        progress_log.append(
+            f"[{datetime.now().strftime('%H:%M:%S')}] Generated {len(questions)} questions"
+        )
 
         # Step 2: Answer each question
         all_answers = []
         for i, question in enumerate(questions, 1):
-            progress_log.append(f"[{datetime.now().strftime('%H:%M:%S')}] Researching question {i}/{len(questions)}: {question[:50]}...")
+            progress_log.append(
+                f"[{datetime.now().strftime('%H:%M:%S')}] Researching question {i}/{len(questions)}: {question[:50]}..."
+            )
 
             # Search the web for this question
             search_result = search_web(question)
@@ -89,11 +81,17 @@ def start_research():
             answer_response = llm.complete(answer_prompt)
             answer = answer_response.text
 
-            all_answers.append(f"**Question {i}:** {question}\n\n**Answer:** {answer}\n\n---\n")
-            progress_log.append(f"[{datetime.now().strftime('%H:%M:%S')}] Completed research for question {i}")
+            all_answers.append(
+                f"**Question {i}:** {question}\n\n**Answer:** {answer}\n\n---\n"
+            )
+            progress_log.append(
+                f"[{datetime.now().strftime('%H:%M:%S')}] Completed research for question {i}"
+            )
 
         # Step 3: Generate final report
-        progress_log.append(f"[{datetime.now().strftime('%H:%M:%S')}] Generating comprehensive report...")
+        progress_log.append(
+            f"[{datetime.now().strftime('%H:%M:%S')}] Generating comprehensive report..."
+        )
 
         report_prompt = f"""You are writing a comprehensive research report on: {topic}
 
@@ -118,31 +116,24 @@ def start_research():
         final_report = report_response.text
 
         # Ensure it starts with a proper title
-        if not final_report.startswith('#'):
+        if not final_report.startswith("#"):
             final_report = f"# Research Report: {topic}\n\n{final_report}"
 
-        progress_log.append(f"[{datetime.now().strftime('%H:%M:%S')}] Research completed successfully!")
+        progress_log.append(
+            f"[{datetime.now().strftime('%H:%M:%S')}] Research completed successfully!"
+        )
 
-        return jsonify({
-            'success': True,
-            'result': final_report,
-            'progress': progress_log,
-            'timestamp': datetime.now().isoformat()
-        })
+        return jsonify(
+            {
+                "success": True,
+                "result": final_report,
+                "progress": progress_log,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
 
     except Exception as e:
-        return jsonify({'success': False, 'message': f'Research failed: {str(e)}'})
-
-
-@app.route("/health")
-def health():
-    return jsonify(
-        {
-            "status": "alive",
-            "timestamp": datetime.now().isoformat(),
-            "message": "Server is running!",
-        }
-    )
+        return jsonify({"success": False, "message": f"Research failed: {str(e)}"})
 
 
 if __name__ == "__main__":

@@ -1,5 +1,4 @@
 // DOM elements
-const apiSection = document.getElementById('apiSection');
 const researchSection = document.getElementById('researchSection');
 const loadingSection = document.getElementById('loadingSection');
 const resultsSection = document.getElementById('resultsSection');
@@ -17,40 +16,6 @@ let intermediateData = {
     answers: [],
     progress: []
 };
-
-// API Keys management
-function setApiKeys() {
-    const groqkey = document.getElementById('groqKey').value.trim();
-    const tavilyKey = document.getElementById('tavilyKey').value.trim();
-    
-    if (!groqkey || !tavilyKey) {
-        showError('Please enter both API keys');
-        return;
-    }
-    
-    fetch('/set_api_keys', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            groq_api_key: groqkey,
-            tvly_api_key: tavilyKey
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showSuccess('API keys saved successfully!');
-            showResearchSection();
-        } else {
-            showError(data.message);
-        }
-    })
-    .catch(error => {
-        showError('Failed to save API keys: ' + error.message);
-    });
-}
 
 // Research management
 function startResearch() {
@@ -152,7 +117,7 @@ function showIntermediateResults() {
 function resetResearch() {
     // Reset all sections
     hideAllSections();
-    showApiSection();
+    showResearchSection();
     
     // Clear form
     document.getElementById('researchTopic').value = '';
@@ -163,11 +128,6 @@ function resetResearch() {
 }
 
 // UI management
-function showApiSection() {
-    hideAllSections();
-    apiSection.style.display = 'block';
-}
-
 function showResearchSection() {
     hideAllSections();
     researchSection.style.display = 'block';
@@ -191,7 +151,6 @@ function showResultsSection() {
 }
 
 function hideAllSections() {
-    apiSection.style.display = 'none';
     researchSection.style.display = 'none';
     loadingSection.style.display = 'none';
     resultsSection.style.display = 'none';
@@ -286,7 +245,7 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Initialize the app
+// Initialize the app - show research section directly
 document.addEventListener('DOMContentLoaded', () => {
-    showApiSection();
-}); 
+    showResearchSection();
+});

@@ -17,24 +17,8 @@
         </header>
 
         <div class="main-content">
-            <!-- API Keys Section -->
-            <div class="api-section" id="apiSection">
-                <h2>🔑 Configure API Keys</h2>
-                <div class="api-form">
-                    <div class="input-group">
-                        <label for="groqKey">Groq API Key</label>
-                        <input type="password" id="groqKey" placeholder="sk-..." />
-                    </div>
-                    <div class="input-group">
-                        <label for="tavilyKey">Tavily API Key</label>
-                        <input type="password" id="tavilyKey" placeholder="tvly-..." />
-                    </div>
-                    <button class="btn btn-primary" onclick="setApiKeys()">Save API Keys</button>
-                </div>
-            </div>
-
-            <!-- Research Section -->
-            <div class="research-section" id="researchSection" style="display: none;">
+            <!-- Research Section (Now shows first!) -->
+            <div class="research-section" id="researchSection">
                 <h2>💭 Start Your Research</h2>
                 <div class="research-form">
                     <div class="input-group">
@@ -79,4 +63,4 @@
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
-</html> 
+</html>
