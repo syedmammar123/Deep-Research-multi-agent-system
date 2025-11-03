@@ -4,63 +4,786 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Deep Research AI Assistant</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <!-- Add Marked.js for markdown rendering -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-nav {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            background: #f0fdf4;
+            color: #16a34a;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            padding: 32px 24px;
+            text-align: center;
+        }
+
+        .chat-header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .chat-header p {
+            font-size: 15px;
+            opacity: 0.95;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 32px 24px;
+            background: #fafbfc;
+            min-height: 500px;
+        }
+
+        .message {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .message.user .avatar {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+
+        .message.assistant .avatar {
+            background: #f3f4f6;
+        }
+
+        .message-content {
+            max-width: 65%;
+            padding: 16px 20px;
+            border-radius: 16px;
+            line-height: 1.6;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant .message-content {
+            background: white;
+            color: #374151;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .message-content.report {
+            max-width: 100%;
+            padding: 28px;
+            background: white;
+            border: 1px solid #e5e7eb;
+        }
+
+        .message-content h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #1f2937;
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 12px;
+        }
+
+        .message-content h2 {
+            font-size: 20px;
+            margin: 24px 0 12px 0;
+            color: #1f2937;
+        }
+
+        .message-content h3 {
+            font-size: 17px;
+            margin: 20px 0 10px 0;
+            color: #374151;
+        }
+
+        .message-content p {
+            margin-bottom: 14px;
+            color: #4b5563;
+        }
+
+        .message-content ul, .message-content ol {
+            margin-left: 24px;
+            margin-bottom: 14px;
+        }
+
+        .message-content li {
+            margin-bottom: 8px;
+            color: #4b5563;
+        }
+
+        .message-content strong {
+            color: #1f2937;
+            font-weight: 600;
+        }
+
+        .message-content blockquote {
+            border-left: 4px solid #3b82f6;
+            padding-left: 16px;
+            margin: 16px 0;
+            color: #6b7280;
+            font-style: italic;
+        }
+
+        .working-status {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 16px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .working-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .working-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e5e7eb;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .working-title {
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 15px;
+        }
+
+        .progress-section {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        .progress-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .progress-header:hover {
+            background: #f3f4f6;
+        }
+
+        .progress-header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .progress-icon {
+            font-size: 16px;
+        }
+
+        .progress-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .progress-toggle {
+            font-size: 12px;
+            color: #6b7280;
+            transition: transform 0.2s;
+        }
+
+        .progress-toggle.open {
+            transform: rotate(180deg);
+        }
+
+        .progress-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .progress-content.open {
+            max-height: 800px;
+            overflow-y: auto;
+        }
+
+        .progress-details {
+            padding: 12px 16px;
+            border-top: 1px solid #e5e7eb;
+            background: white;
+            font-size: 13px;
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
+        .progress-details div {
+            padding: 4px 0;
+        }
+
+        .step-complete {
+            color: #16a34a;
+        }
+
+        .step-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #dbeafe;
+            color: #1e40af;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .chat-input {
+            padding: 24px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 12px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        #researchInput {
+            flex: 1;
+            padding: 16px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.2s;
+            background: #fafbfc;
+        }
+
+        #researchInput:focus {
+            border-color: #3b82f6;
+            background: white;
+        }
+
+        #sendBtn {
+            padding: 16px 32px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-size: 15px;
+        }
+
+        #sendBtn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        #sendBtn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .action-btn {
+            padding: 10px 20px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #374151;
+            font-weight: 500;
+        }
+
+        .action-btn:hover {
+            background: #f9fafb;
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #6b7280;
+        }
+
+        .empty-state h2 {
+            font-size: 24px;
+            margin-bottom: 12px;
+            color: #1f2937;
+            font-weight: 600;
+        }
+
+        .empty-state p {
+            margin-bottom: 32px;
+            font-size: 16px;
+        }
+
+        .example-topics {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .example-topic {
+            padding: 12px 20px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #374151;
+        }
+
+        .example-topic:hover {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .chat-container {
+                box-shadow: none;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+
+            .chat-header {
+                padding: 24px 16px;
+            }
+
+            .chat-header h1 {
+                font-size: 22px;
+            }
+
+            .chat-messages {
+                padding: 20px 16px;
+            }
+
+            .chat-input {
+                padding: 16px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <h1>🔬 Deep Research AI</h1>
-            <p>Multi-agent research system powered by AI</p>
-        </header>
+    <div class="top-nav">
+        <div class="logo">
+            <div class="logo-icon">🔬</div>
+            <div class="logo-text">Deep Research AI</div>
+        </div>
+        <div class="nav-right">
+            <div class="status-badge">● Online</div>
+        </div>
+    </div>
 
-        <div class="main-content">
-            <!-- Research Section (Now shows first!) -->
-            <div class="research-section" id="researchSection">
-                <h2>💭 Start Your Research</h2>
-                <div class="research-form">
-                    <div class="input-group">
-                        <label for="researchTopic">Research Topic</label>
-                        <textarea id="researchTopic" placeholder="Enter your research topic here... (e.g., 'temperature of karachi on 24th june 2025')" rows="3"></textarea>
-                    </div>
-                    <button class="btn btn-primary" onclick="startResearch()" id="startBtn">
-                        <span class="btn-text">Start Research</span>
-                        <span class="btn-loading" style="display: none;">
-                            <div class="spinner"></div>
-                            Researching...
-                        </span>
-                    </button>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>Multi-Agent Research Assistant</h1>
+            <p>Comprehensive AI-powered research reports in minutes</p>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="empty-state" id="emptyState">
+                <h2>👋 Ready to Start</h2>
+                <p>Enter a topic and I'll conduct deep research using multiple AI agents</p>
+                <div class="example-topics">
+                    <div class="example-topic" onclick="setTopic('Impact of AI on healthcare in 2025')">Impact of AI on healthcare in 2025</div>
+                    <div class="example-topic" onclick="setTopic('Latest developments in quantum computing')">Latest developments in quantum computing</div>
+                    <div class="example-topic" onclick="setTopic('Sustainable energy solutions')">Sustainable energy solutions</div>
+                    <div class="example-topic" onclick="setTopic('Future of electric vehicles')">Future of electric vehicles</div>
                 </div>
             </div>
+        </div>
 
-            <!-- Loading Section -->
-            <div class="loading-section" id="loadingSection" style="display: none;">
-                <h2>🔍 Research in Progress</h2>
-                <div class="loading-container">
-                    <div class="loading-spinner"></div>
-                    <p class="loading-text">Your AI agents are working hard to research your topic...</p>
-                    <p class="loading-subtext">This may take a few minutes. Please don't close this page.</p>
-                </div>
-                <!-- Intermediate Results Section -->
-                <div class="intermediate-results" id="intermediateResults" style="display: none;">
-                    <h3>📊 Current Progress</h3>
-                    <div class="progress-log" id="intermediateProgressLog"></div>
-                    <div class="intermediate-answers" id="intermediateAnswers"></div>
-                </div>
-            </div>
-
-            <!-- Results Section -->
-            <div class="results-section" id="resultsSection" style="display: none;">
-                <h2>📋 Research Report</h2>
-                <div class="progress-log" id="progressLog"></div>
-                <div class="results-container" id="resultsContainer"></div>
-                <button class="btn btn-secondary" onclick="resetResearch()">Start New Research</button>
+        <div class="chat-input">
+            <div class="input-wrapper">
+                <input type="text" id="researchInput" placeholder="What would you like me to research?" />
+                <button id="sendBtn" onclick="startResearch()">Research</button>
             </div>
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        let isResearching = false;
+        let workingStatusDiv = null;
+
+        function addMessage(content, type) {
+            const emptyState = document.getElementById('emptyState');
+            if (emptyState) {
+                emptyState.remove();
+            }
+
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar';
+            avatar.textContent = type === 'user' ? '👤' : '🤖';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            
+            if (type === 'assistant' && typeof marked !== 'undefined') {
+                contentDiv.innerHTML = marked.parse(content);
+                contentDiv.classList.add('report');
+            } else {
+                contentDiv.textContent = content;
+            }
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(contentDiv);
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            
+            return messageDiv;
+        }
+
+        function showWorkingStatus() {
+            const messagesDiv = document.getElementById('chatMessages');
+            workingStatusDiv = document.createElement('div');
+            workingStatusDiv.className = 'working-status';
+            workingStatusDiv.innerHTML = `
+                <div class="working-header">
+                    <div class="working-spinner"></div>
+                    <div class="working-title">🤖 AI Agents Working...</div>
+                </div>
+                <div id="progressSteps"></div>
+            `;
+            messagesDiv.appendChild(workingStatusDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function addProgressStep(title, icon, details = null, isComplete = false) {
+            if (!workingStatusDiv) return;
+            
+            const stepsContainer = workingStatusDiv.querySelector('#progressSteps');
+            const stepId = `step-${Date.now()}`;
+            
+            const stepDiv = document.createElement('div');
+            stepDiv.className = 'progress-section';
+            stepDiv.innerHTML = `
+                <div class="progress-header" onclick="toggleStep('${stepId}')">
+                    <div class="progress-header-left">
+                        <span class="progress-icon">${icon}</span>
+                        <span class="progress-label">${title}</span>
+                        ${isComplete ? '<span class="step-badge">Complete</span>' : '<span class="step-badge">Working...</span>'}
+                    </div>
+                    <span class="progress-toggle" id="${stepId}-toggle">▼</span>
+                </div>
+                <div class="progress-content" id="${stepId}-content">
+                    <div class="progress-details">${details || 'Processing...'}</div>
+                </div>
+            `;
+            
+            stepsContainer.appendChild(stepDiv);
+            
+            const messagesDiv = document.getElementById('chatMessages');
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function updateProgressStep(index, details, isComplete = false) {
+            if (!workingStatusDiv) return;
+            
+            const stepsContainer = workingStatusDiv.querySelector('#progressSteps');
+            const steps = stepsContainer.querySelectorAll('.progress-section');
+            
+            if (steps[index]) {
+                const detailsDiv = steps[index].querySelector('.progress-details');
+                detailsDiv.innerHTML = details;
+                
+                if (isComplete) {
+                    const badge = steps[index].querySelector('.step-badge');
+                    badge.textContent = 'Complete';
+                    badge.style.background = '#dcfce7';
+                    badge.style.color = '#166534';
+                }
+            }
+        }
+
+        function toggleStep(stepId) {
+            const content = document.getElementById(`${stepId}-content`);
+            const toggle = document.getElementById(`${stepId}-toggle`);
+            
+            if (content.classList.contains('open')) {
+                content.classList.remove('open');
+                toggle.classList.remove('open');
+            } else {
+                content.classList.add('open');
+                toggle.classList.add('open');
+            }
+        }
+
+        function completeWorkingStatus() {
+            if (!workingStatusDiv) return;
+            
+            const header = workingStatusDiv.querySelector('.working-header');
+            header.innerHTML = `
+                <span style="color: #16a34a; font-size: 20px;">✓</span>
+                <div class="working-title" style="color: #16a34a;">Research Complete</div>
+            `;
+        }
+
+        function setTopic(topic) {
+            document.getElementById('researchInput').value = topic;
+            document.getElementById('researchInput').focus();
+        }
+
+        async function startResearch() {
+            const input = document.getElementById('researchInput');
+            const topic = input.value.trim();
+            
+            if (!topic || isResearching) return;
+            
+            isResearching = true;
+            document.getElementById('sendBtn').disabled = true;
+            document.getElementById('sendBtn').textContent = 'Researching...';
+            
+            // Add user message
+            addMessage(topic, 'user');
+            input.value = '';
+            
+            // Show working status
+            showWorkingStatus();
+            
+            // Add initial step
+            addProgressStep('Initializing AI Agents', '🚀', 'Starting research on: ' + topic);
+            
+            try {
+                const response = await fetch('/start_research', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ topic })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Parse and display progress logs as steps
+                    if (data.progress && data.progress.length > 0) {
+                        // Update initialization step
+                        const startLog = data.progress.find(log => log.includes('Starting research'));
+                        if (startLog) {
+                            updateProgressStep(0, startLog, true);
+                        }
+                        
+                        // Question generation step
+                        const questionLog = data.progress.find(log => log.includes('Generated') && log.includes('questions'));
+                        if (questionLog) {
+                            addProgressStep('Generating Research Questions', '❓', questionLog, true);
+                        }
+                        
+                        // Research step with all questions
+                        const researchLogs = data.progress.filter(log => log.includes('Researching question'));
+                        if (researchLogs.length > 0) {
+                            const researchDetails = researchLogs.map(log => {
+                                const match = log.match(/Researching question (\d+)\/(\d+): (.+)/);
+                                if (match) {
+                                    return `<div style="padding: 4px 0;"><strong>Question ${match[1]}:</strong> ${match[3]}</div>`;
+                                }
+                                return `<div style="padding: 4px 0;">${log}</div>`;
+                            }).join('');
+                            addProgressStep(`Web Research & Analysis`, '🔍', researchDetails, true);
+                        }
+                        
+                        // Answering step
+                        const completedLogs = data.progress.filter(log => log.includes('Completed research for question'));
+                        if (completedLogs.length > 0) {
+                            const completedDetails = completedLogs.map(log => `<div style="padding: 2px 0;">${log}</div>`).join('');
+                            addProgressStep('Data Collection Complete', '✓', completedDetails, true);
+                        }
+                        
+                        // Report generation
+                        const reportLog = data.progress.find(log => log.includes('Generating comprehensive report'));
+                        if (reportLog) {
+                            addProgressStep('Generating Report', '📝', reportLog, true);
+                        }
+                        
+                        // Final step
+                        const finalLog = data.progress.find(log => log.includes('Research completed successfully'));
+                        if (finalLog) {
+                            addProgressStep('Finalization', '🎉', finalLog, true);
+                        }
+                    }
+                    
+                    // Complete the working status
+                    completeWorkingStatus();
+                    
+                    // Add final research report
+                    setTimeout(() => {
+                        addMessage(data.result, 'assistant');
+                        
+                        // Add action buttons
+                        const messagesDiv = document.getElementById('chatMessages');
+                        const actionsDiv = document.createElement('div');
+                        actionsDiv.className = 'action-buttons';
+                        actionsDiv.innerHTML = `
+                            <button class="action-btn" onclick="copyReport()">📋 Copy Report</button>
+                            <button class="action-btn" onclick="newResearch()">🔄 New Research</button>
+                        `;
+                        messagesDiv.appendChild(actionsDiv);
+                        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                    }, 300);
+                } else {
+                    if (workingStatusDiv) workingStatusDiv.remove();
+                    addMessage(`❌ ${data.message}`, 'assistant');
+                }
+            } catch (error) {
+                if (workingStatusDiv) workingStatusDiv.remove();
+                addMessage(`❌ Research failed: ${error.message}`, 'assistant');
+            } finally {
+                isResearching = false;
+                document.getElementById('sendBtn').disabled = false;
+                document.getElementById('sendBtn').textContent = 'Research';
+                input.focus();
+            }
+        }
+
+        function copyReport() {
+            const reports = document.querySelectorAll('.message.assistant .message-content.report');
+            if (reports.length > 0) {
+                const lastReport = reports[reports.length - 1];
+                navigator.clipboard.writeText(lastReport.innerText);
+                alert('✓ Report copied to clipboard!');
+            }
+        }
+
+        function newResearch() {
+            document.getElementById('researchInput').focus();
+        }
+
+        // Enter key to submit
+        document.getElementById('researchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !isResearching) {
+                startResearch();
+            }
+        });
+    </script>
 </body>
 </html>
