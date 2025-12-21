@@ -16,12 +16,30 @@ groq_api_key = os.getenv("GROQ_API_KEY")
 tvly_api_key = os.getenv("TVLY_API_KEY")
 
 
+
 def search_web(query: str) -> str:
     """Useful for using the web to answer questions."""
     try:
         client = TavilyClient(api_key=tvly_api_key)
-        result = client.search(query)
-        return str(result)
+        # Limit results to 5 to save tokens
+        response = client.search(query, search_depth="advanced", max_results=5)
+        
+        # Parse and format only the necessary information
+        results = response.get("results", [])
+        formatted_output = []
+        
+        for result in results:
+            title = result.get("title", "No title")
+            url = result.get("url", "No URL")
+            content = result.get("content", "")
+            
+            # # Truncate content to avoid token overflow (max 500 chars per result)
+            # if len(content) > 500:
+            #     content = content[:500] + "..."
+            
+            formatted_output.append(f"Title: {title}\nURL: {url}\nContent: {content}")
+            
+        return "\n\n".join(formatted_output)
     except Exception as e:
         return f"Search failed: {str(e)}"
 
