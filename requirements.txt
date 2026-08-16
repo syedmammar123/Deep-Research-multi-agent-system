@@ -1,6 +1,5 @@
 flask
-llama-index
-llama-index-llms-openai
-llama-index-llms-groq
+langgraph
+langchain-groq
 tavily-python
-python-dotenv 
+python-dotenv
