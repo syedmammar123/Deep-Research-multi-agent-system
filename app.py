@@ -1,12 +1,14 @@
 from flask import Flask, render_template, request, jsonify
 import os
+import operator
 from datetime import datetime
-from typing import TypedDict
+from typing import Annotated, TypedDict
 from dotenv import load_dotenv
 load_dotenv()
 
 # Import your existing research system
 from langgraph.graph import StateGraph, START, END
+from langgraph.types import Send
 from langchain_groq import ChatGroq
 from tavily import TavilyClient
 
@@ -50,42 +52,66 @@ def search_web(query: str) -> str:
 class ResearchState(TypedDict):
     topic: str
     questions: list[str]
-    answers: list[str]
+    # Answers arrive from parallel branches in completion order, so each one
+    # carries its question index and is sorted back into place before the report.
+    answers: Annotated[list[tuple[int, str]], operator.add]
     report: str
-    progress_log: list[str]
+    progress_log: Annotated[list[str], operator.add]
 
 
-def generate_questions(state: ResearchState) -> ResearchState:
+class QuestionState(TypedDict):
+    """The payload one fanned-out `answer_question` branch receives."""
+
+    topic: str
+    index: int
+    total: int
+    question: str
+
+
+def timestamp() -> str:
+    return datetime.now().strftime("%H:%M:%S")
+
+
+def generate_questions(state: ResearchState) -> dict:
     topic = state["topic"]
 
-    state["progress_log"].append(
-        f"[{datetime.now().strftime('%H:%M:%S')}] Starting research on: {topic}"
-    )
-
-    question_prompt = f"""Generate 5-7 specific questions about this topic: {topic}
+    question_prompt = f"""Generate 3-4 specific questions about this topic: {topic}
     Provide the questions one per line. Don't include markdown or any preamble, just a list of questions."""
 
     question_response = llm.invoke(question_prompt)
     questions_text = question_response.content
     questions = [q.strip() for q in questions_text.split("\n") if q.strip()]
 
-    state["questions"] = questions
-    state["progress_log"].append(
-        f"[{datetime.now().strftime('%H:%M:%S')}] Generated {len(questions)} questions"
-    )
+    return {
+        "questions": questions,
+        "progress_log": [
+            f"[{timestamp()}] Starting research on: {topic}",
+            f"[{timestamp()}] Generated {len(questions)} questions",
+        ],
+    }
 
-    return state
 
-
-def answer_questions(state: ResearchState) -> ResearchState:
-    questions = state["questions"]
-    all_answers = []
-
-    for i, question in enumerate(questions, 1):
-        state["progress_log"].append(
-            f"[{datetime.now().strftime('%H:%M:%S')}] Researching question {i}/{len(questions)}: {question[:50]}..."
+def route_questions(state: ResearchState) -> list[Send]:
+    """Dispatch one concurrent `answer_question` branch per question."""
+    total = len(state["questions"])
+    return [
+        Send(
+            "answer_question",
+            {"topic": state["topic"], "index": i, "total": total, "question": question},
         )
+        for i, question in enumerate(state["questions"], 1)
+    ]
 
+
+def answer_question(state: QuestionState) -> dict:
+    i = state["index"]
+    question = state["question"]
+
+    progress_log = [
+        f"[{timestamp()}] Researching question {i}/{state['total']}: {question[:50]}..."
+    ]
+
+    try:
         # Search the web for this question
         search_result = search_web(question)
 
@@ -98,25 +124,24 @@ def answer_questions(state: ResearchState) -> ResearchState:
 
         answer_response = llm.invoke(answer_prompt)
         answer = answer_response.content
+    except Exception as e:
+        # One failed branch shouldn't discard the work the others already finished.
+        answer = f"_This question could not be researched: {e}_"
 
-        all_answers.append(
-            f"**Question {i}:** {question}\n\n**Answer:** {answer}\n\n---\n"
-        )
-        state["progress_log"].append(
-            f"[{datetime.now().strftime('%H:%M:%S')}] Completed research for question {i}"
-        )
+    progress_log.append(f"[{timestamp()}] Completed research for question {i}")
 
-    state["answers"] = all_answers
-    return state
+    return {
+        "answers": [
+            (i, f"**Question {i}:** {question}\n\n**Answer:** {answer}\n\n---\n")
+        ],
+        "progress_log": progress_log,
+    }
 
 
-def write_report(state: ResearchState) -> ResearchState:
+def write_report(state: ResearchState) -> dict:
     topic = state["topic"]
-    all_answers = state["answers"]
-
-    state["progress_log"].append(
-        f"[{datetime.now().strftime('%H:%M:%S')}] Generating comprehensive report..."
-    )
+    all_answers = [text for _, text in sorted(state["answers"])]
+    report_started_at = timestamp()
 
     report_prompt = f"""You are writing a comprehensive research report on: {topic}
 
@@ -144,21 +169,25 @@ def write_report(state: ResearchState) -> ResearchState:
     if not final_report.startswith("#"):
         final_report = f"# Research Report: {topic}\n\n{final_report}"
 
-    state["report"] = final_report
-    state["progress_log"].append(
-        f"[{datetime.now().strftime('%H:%M:%S')}] Research completed successfully!"
-    )
-
-    return state
+    return {
+        "report": final_report,
+        "progress_log": [
+            f"[{report_started_at}] Generating comprehensive report...",
+            f"[{timestamp()}] Research completed successfully!",
+        ],
+    }
 
 
 graph_builder = StateGraph(ResearchState)
 graph_builder.add_node("generate_questions", generate_questions)
-graph_builder.add_node("answer_questions", answer_questions)
+graph_builder.add_node("answer_question", answer_question)
 graph_builder.add_node("write_report", write_report)
 graph_builder.add_edge(START, "generate_questions")
-graph_builder.add_edge("generate_questions", "answer_questions")
-graph_builder.add_edge("answer_questions", "write_report")
+# Fan out: one concurrent branch per question. `write_report` waits for all of them.
+graph_builder.add_conditional_edges(
+    "generate_questions", route_questions, ["answer_question"]
+)
+graph_builder.add_edge("answer_question", "write_report")
 graph_builder.add_edge("write_report", END)
 research_graph = graph_builder.compile()
 
@@ -187,11 +216,14 @@ def start_research():
 
         final_state = research_graph.invoke(initial_state)
 
+        # Parallel branches append out of order; sort by the [HH:MM:SS] prefix.
+        progress = sorted(final_state["progress_log"], key=lambda line: line[1:9])
+
         return jsonify(
             {
                 "success": True,
                 "result": final_state["report"],
-                "progress": final_state["progress_log"],
+                "progress": progress,
                 "timestamp": datetime.now().isoformat(),
             }
         )
