@@ -1,170 +1,94 @@
-# 🔬 Deep Research Multi AI Agent
+# Deep Research Agent
 
-A multi-agent deep research system. This application provides a modern, user-friendly way to conduct comprehensive research using AI agents.
-
-## 🎬 Demo Video
+A Flask app that turns a research topic into a cited markdown report. It plans its own questions, researches them in parallel against live web search, and writes a report where every claim links back to the page it came from.
 
 ![Demo Video](demo-video.gif)
 
-*Watch the app in action! See how it generates research questions, searches the web, and creates comprehensive reports in just minutes.*
+## What it does
 
+Give it a topic. It then:
 
-## 🏗️ Architecture Diagram
+1. Asks the model for 2 to 3 specific questions worth investigating.
+2. Researches every question **at the same time**, one concurrent branch each, using Tavily web search.
+3. Combines the answers into a report with an executive summary, key findings, analysis, and conclusion.
 
-![Architecture Diagram](diagram.svg)
+Progress streams to the browser live, so you watch each question move through searching, answering, and done rather than staring at a spinner for three minutes.
 
-*System architecture showing the flow from user input to final research report generation.*
+## Cited by construction
 
-## ✨ Features
+The model never writes a URL. It only ever sees a numbered list of search results and writes markers like `[1]` and `[2]` into its prose. Every link in the finished report is put back by code, from Tavily's own response, which means a fabricated citation is not something the app detects after the fact: the model has no way to express one.
 
-- **Beautiful UI**: Modern peachy color scheme with smooth animations
-- **Markdown Reports**: Professional formatting with headers, lists, and code blocks
-- **API Key Management**: Secure input for OpenAI and Tavily API keys
-- **Multi-agent System**: Leverages question generation, web search, and report synthesis
-- **Responsive Design**: Works perfectly on desktop and mobile devices
-- **Progress Tracking**: Real-time updates showing research status
-- **Toast Notifications**: Clear feedback for all user actions
+Clicking any `[n]` in the report opens that source in a new tab, and the report ends with a matching References list.
 
-## 🚀 Quick Start
+Getting this right needs a few things that are easy to miss:
 
-### 1. Clone the Repository
+* Each question searches independently and numbers its own results from 1, so `[1]` means different pages in different answers. All sources are deduplicated by URL into one global numbering before the report is written.
+* Markers become links only *after* the report is generated. A model that can see URLs will eventually truncate one.
+* Any marker naming a source that does not exist is stripped, and the References list is built from the markers that survive, so the two halves cannot disagree.
+
+## Architecture
+
+![Architecture Diagram](diagram.png)
+
+Orchestration is a [LangGraph](https://langchain-ai.github.io/langgraph/) `StateGraph`:
+
+```
+generate_questions
+      |
+      v  Send() fan-out, one branch per question
+answer_question   (search, then answer with citations)
+      |
+      v  branches rejoin through the `answers` reducer
+write_report
+```
+
+The fan-out is real concurrency, not a loop: LangGraph runs the branches on a thread pool, and since both the Tavily and Groq calls are blocking network I/O they overlap in wall clock time. Branches finish out of order, so each answer carries its question index and is sorted back into place before the report is written.
+
+```
+app.py                Flask routes and the SSE endpoint. Web layer only.
+research/
+  config.py           env loading, fail fast key validation, the shared LLM client
+  resilience.py       tenacity retry policies for Groq and Tavily
+  state.py            graph state and QAResult
+  citations.py        source registry, marker remapping, references
+  search.py           Tavily search
+  events.py           progress event builders and SSE framing
+  nodes.py            the graph nodes
+  graph.py            graph wiring
+templates/index.html  markup
+static/css/app.css    styling
+static/js/app.js      frontend logic
+```
+
+**Resilience.** Every Groq and Tavily call retries with exponential backoff and jitter on rate limits, timeouts, and 5xx, and fails fast on anything a retry cannot fix, such as a bad key or an unknown model. A branch that still fails is caught in place: the run finishes with that one section missing instead of losing the other two.
+
+**Streaming.** `POST /start_research` is a Server Sent Events stream, not a JSON endpoint. The frontend reads it with `fetch` and a stream reader rather than `EventSource`, which is GET only and auto reconnects, and would silently restart a three minute run.
+
+## Setup
 
 ```bash
 git clone https://github.com/syedmammar123/Deep-Research-multi-agent-system.git
 cd Deep-Research-multi-agent-system
-```
-
-### 2. Install Dependencies
-
-```bash
 pip install -r requirements.txt
 ```
 
-### 3. Get API Keys
+Copy `.env.example` to `.env` and fill in two keys:
 
-You'll need two API keys:
+* `GROQ_API_KEY` from [Groq](https://console.groq.com/keys)
+* `TVLY_API_KEY` from [Tavily](https://tavily.com/)
 
-- **OpenAI API Key**: Get it from [OpenAI Platform](https://platform.openai.com/api-keys)
-- **Tavily API Key**: Get it from [Tavily](https://tavily.com/)
-
-### 4. Run the Application
+`GROQ_MODEL` is optional and defaults to `openai/gpt-oss-20b`. Both keys are validated at import, so a bad `.env` fails at startup instead of several minutes into a run.
 
 ```bash
 python app.py
 ```
 
-### 5. Open Your Browser
+Then open `http://localhost:5000`. A full report takes roughly 3 to 4 minutes.
 
-Navigate to `http://localhost:5000` and start researching!
+## Tech
 
-## 🎯 How to Use
+Flask, LangGraph, Groq, Tavily, tenacity, and vanilla JavaScript with marked.js for rendering. No frontend build step.
 
-1. **Configure API Keys**: Enter your OpenAI and Tavily API keys in the secure input fields
-2. **Enter Research Topic**: Type your research question or topic (e.g., "Temperature of karachi on 24th june 2025")
-3. **Watch the Magic**: Observe as the AI agents:
-   - Generate relevant research questions
-   - Search the web for information
-   - Synthesize a comprehensive report
-4. **Get Your Report**: View the final research report with all findings in beautiful markdown format
+## Notes
 
-## 🏗️ Architecture
-
-The application uses a simplified, efficient workflow:
-
-- **Question Generation**: Creates 5-7 specific research questions
-- **Web Search**: Uses Tavily API to find current information
-- **Answer Synthesis**: Combines search results with AI analysis
-- **Report Creation**: Generates professional markdown reports
-
-## 🎨 UI Features
-
-- **Peachy Color Scheme**: Warm, inviting colors that reduce eye strain
-- **Modern Typography**: Clean Inter font for excellent readability
-- **Smooth Animations**: Engaging transitions and loading states
-- **Markdown Rendering**: Professional report formatting
-- **Responsive Design**: Optimized for all screen sizes
-- **Toast Notifications**: Clear feedback with proper contrast
-
-## 🔧 Technical Details
-
-- **Backend**: Flask web framework
-- **Frontend**: Vanilla JavaScript with modern CSS
-- **AI Integration**: OpenAI GPT-4o-mini for intelligent responses
-- **Web Search**: Tavily API for comprehensive web research
-- **Markdown**: Marked.js for beautiful report rendering
-- **Styling**: Custom CSS with peachy color scheme
-
-## 📁 Project Structure
-
-```
-Deep-Research-multi-agent-system/
-├── app.py                 # Main Flask application
-├── requirements.txt      # Python dependencies
-├── README.md            # This file
-├── templates/
-│   └── index.html       # Main HTML template
-└── static/
-    ├── style.css        # Beautiful CSS styles
-    └── script.js        # Interactive JavaScript
-```
-
-## 🛠️ Development
-
-To modify or extend the application:
-
-1. **Styling**: Edit `static/style.css` for visual changes
-2. **Functionality**: Modify `static/script.js` for frontend behavior
-3. **Backend Logic**: Update `app.py` for server-side changes
-4. **Research System**: Modify the research workflow in `app.py`
-
-## 🔒 Security Notes
-
-- API keys are stored in memory only (not persisted)
-- Input validation prevents malicious requests
-- No sensitive data is logged or stored
-
-## 🐛 Troubleshooting
-
-**Common Issues:**
-
-1. **API Key Errors**: Ensure both OpenAI and Tavily keys are valid
-2. **Connection Issues**: Check if the server is running on port 5000
-3. **Research Timeouts**: Complex topics may take 3-4 minutes to process
-4. **Import Errors**: Make sure all dependencies are installed correctly
-
-**Getting Help:**
-- Check the browser console for JavaScript errors
-- Review the Flask server logs for backend issues
-- Ensure all dependencies are properly installed with `pip install -r requirements.txt`
-
-## 📊 Performance
-
-- **Research Time**: 3-4 minutes for comprehensive reports
-- **API Usage**: Optimized to minimize costs
-- **Memory Usage**: Lightweight, efficient processing
-- **Browser Compatibility**: Works on all modern browsers
-
-## 🎯 Use Cases
-
-Perfect for:
-- **Academic Research**: Quick literature reviews and topic analysis
-- **Business Intelligence**: Market research and competitive analysis
-- **Content Creation**: Research for articles and reports
-- **Learning**: Understanding complex topics quickly
-- **Presentations**: Gathering comprehensive information for talks
-
-## 📝 License
-
-This project is open source and available under the MIT License.
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📞 Support
-
-If you have any questions or issues, please open an issue on GitHub.
-
----
-
-**Happy Researching! 🔬✨** 
+`Deep_Research_multi_agent_system.ipynb` is the original prototype, built on LlamaIndex workflows with OpenAI and three distinct agents. The app has since moved to LangGraph and Groq. The notebook is kept as a reference for the multi agent features the app still lacks, namely distinct agent personas and a per question tool loop.

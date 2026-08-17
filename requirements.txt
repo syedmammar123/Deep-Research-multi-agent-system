@@ -1,5 +1,9 @@
-flask
-langgraph
-langchain-groq
-tavily-python
-python-dotenv
+flask==2.3.3
+langgraph==0.4.8
+langchain-groq==0.2.5
+tavily-python==0.3.3
+python-dotenv==1.0.0
+tenacity==8.5.0
+# Imported directly by research/resilience.py to classify retryable errors.
+groq>=0.11
+requests>=2.31

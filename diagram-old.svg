@@ -1,0 +1,299 @@
+<svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+  <!-- Hand-drawn style definitions -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" 
+     refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2563eb" 
+               stroke="#2563eb" stroke-width="1" 
+               transform="rotate(2)" opacity="0.8"/>
+    </marker>
+    
+    <!-- Hand-drawn patterns -->
+    <pattern id="dots" patternUnits="userSpaceOnUse" width="20" height="20">
+      <circle cx="2" cy="2" r="1" fill="#e5e7eb" opacity="0.5"/>
+    </pattern>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="800" fill="#fefefe" stroke="none"/>
+  
+  <!-- Title -->
+  <text x="600" y="40" text-anchor="middle" font-family="Comic Sans MS, cursive" 
+        font-size="24" fill="#1f2937" font-weight="bold" 
+        transform="rotate(-0.5 600 40)">
+    Deep Research Workflow Architecture
+  </text>
+  
+  <!-- Main workflow container -->
+  <rect x="50" y="80" width="1100" height="680" 
+        fill="none" stroke="#6b7280" stroke-width="2" 
+        rx="15" ry="15" stroke-dasharray="5,3"
+        transform="rotate(0.3 600 420)"/>
+  
+  <!-- User Input -->
+  <g transform="translate(100,130)">
+    <rect x="0" y="0" width="180" height="60" 
+          fill="#fef3c7" stroke="#f59e0b" stroke-width="2" 
+          rx="8" ry="8" transform="rotate(-1)"/>
+    <text x="90" y="35" text-anchor="middle" font-family="Comic Sans MS, cursive" 
+          font-size="14" fill="#92400e" font-weight="bold">
+      Research Topic
+    </text>
+    <text x="90" y="50" text-anchor="middle" font-family="Comic Sans MS, cursive" 
+          font-size="10" fill="#92400e">
+      (User Input)
+    </text>
+  </g>
+  
+  <!-- Question Agent -->
+  <g transform="translate(400,120)">
+    <ellipse cx="90" cy="40" rx="85" ry="35" 
+             fill="#dbeafe" stroke="#2563eb" stroke-width="2.5"
+             transform="rotate(1)"/>
+    <text x="90" y="35" text-anchor="middle" font-family="Comic Sans MS, cursive" 
+          font-size="13" fill="#1d4ed8" font-weight="bold">
+      Question Agent
+    </text>
+    <text x="90" y="48" text-anchor="middle" font-family="Comic Sans MS, cursive" 
+          font-size="9" fill="#1d4ed8">
+      (GPT-4 Mini)
+    </text>
+  </g>
+  
+  <!-- Questions Box -->
+  <g transform="translate(350,220)">
+    <rect x="0" y="0" width="200" height="80" 
+          fill="#ecfdf5" stroke="#10b981" stroke-width="2" 
+          rx="10" ry="10" transform="rotate(-0.5)"/>
+    <text x="100" y="20" text-anchor="middle" font-family="Comic Sans MS, cursive" 
+          font-size="12" fill="#047857" font-weight="bold">
+      Generated Questions
+    </text>
+    <text x="20" y="38" font-family="Comic Sans MS, cursive" 
+          font-size="9" fill="#047857">
+      • Question 1
+    </text>
+    <text x="20" y="50" font-family="Comic Sans MS, cursive" 
+          font-size="9" fill="#047857">
+      • Question 2
+    </text>
+    <text x="20" y="62" font-family="Comic Sans MS, cursive" 
+          font-size="9" fill="#047857">
+      • Question N...
+    </text>
+  </g>
+  
+  <!-- Answer Agents (Multiple) -->
+  <g transform="translate(150,380)">
+    <!-- Agent 1 -->
+    <ellipse cx="60" cy="40" rx="55" ry="30" 
+             fill="#fce7f3" stroke="#ec4899" stroke-width="2"
+             transform="rotate(-1)"/>
+    <text x="60" y="40" text-anchor="middle" font-family="Comic Sans MS, cursive" 
+          font-size="11" fill="#be185d" font-weight="bold">
+      Answer Agent 1
+    </text>
+    
+    <!-- Agent 2 -->
+    <ellipse cx="180" cy="40" rx="55" ry="30" 
+             fill="#fce7f3" stroke="#ec4899" stroke-width="2"
+             transform="rotate(0.5)"/>
+    <text x="180" y="40" text-anchor="middle" font-family="Comic Sans MS, cursive" 
+          font-size="11" fill="#be185d" font-weight="bold">
+      Answer Agent 2
+    </text>
+    
+    <!-- Agent N -->
+    <ellipse cx="300" cy="40" rx="55" ry="30" 
+             fill="#fce7f3" stroke="#ec4899" stroke-width="2"
+             transform="rotate(-0.8)"/>
+    <text x="300" y="40" text-anchor="middle" font-family="Comic Sans MS, cursive" 
+          font-size="11" fill="#be185d" font-weight="bold">
+      Answer Agent N
+    </text>
+  </g>
+  
+  <!-- Web Search API -->
+  <g transform="translate(650,350)">
+    <rect x="0" y="0" width="120" height="100" 
+          fill="#f3e8ff" stroke="#8b5cf6" stroke-width="2" 
+          rx="15" ry="15" transform="rotate(1)"/>
+    <circle cx="60" cy="30" r="15" fill="#8b5cf6" opacity="0.7"/>
+    <text x="60" y="35" text-anchor="middle" font-family="Comic Sans MS, cursive" 
+          font-size="8" fill="white" font-weight="bold">
+      WEB
+    </text>
+    <text x="60" y="55" text-anchor="middle" font-family="Comic Sans MS, cursive" 
+          font-size="10" fill="#6b21a8" font-weight="bold">
+      Tavily API
+    </text>
+    <text x="60" y="68" text-anchor="middle" font-family="Comic Sans MS, cursive" 
+          font-size="8" fill="#6b21a8">
+      Web Search
+    </text>
+    <text x="60" y="80" text-anchor="middle" font-family="Comic Sans MS, cursive" 
+          font-size="8" fill="#6b21a8">
+      Real-time Data
+    </text>
+  </g>
+  
+  <!-- Answers Collection -->
+  <g transform="translate(150,520)">
+    <rect x="0" y="0" width="350" height="60" 
+          fill="#fff7ed" stroke="#ea580c" stroke-width="2" 
+          rx="10" ry="10" transform="rotate(-0.3)"/>
+    <text x="175" y="25" text-anchor="middle" font-family="Comic Sans MS, cursive" 
+          font-size="12" fill="#c2410c" font-weight="bold">
+      Collected Answers
+    </text>
+    <text x="175" y="40" text-anchor="middle" font-family="Comic Sans MS, cursive" 
+          font-size="10" fill="#c2410c">
+      (Question + Answer Pairs)
+    </text>
+  </g>
+  
+  <!-- Report Agent -->
+  <g transform="translate(700,520)">
+    <ellipse cx="90" cy="40" rx="85" ry="35" 
+             fill="#f0f9ff" stroke="#0284c7" stroke-width="2.5"
+             transform="rotate(-1)"/>
+    <text x="90" y="35" text-anchor="middle" font-family="Comic Sans MS, cursive" 
+          font-size="13" fill="#0369a1" font-weight="bold">
+      Report Agent
+    </text>
+    <text x="90" y="48" text-anchor="middle" font-family="Comic Sans MS, cursive" 
+          font-size="9" fill="#0369a1">
+      (GPT-4 Mini)
+    </text>
+  </g>
+  
+  <!-- Final Report -->
+  <g transform="translate(850,630)">
+    <rect x="0" y="0" width="180" height="60" 
+          fill="#f0fdf4" stroke="#16a34a" stroke-width="2.5" 
+          rx="8" ry="8" transform="rotate(0.5)"/>
+    <text x="90" y="35" text-anchor="middle" font-family="Comic Sans MS, cursive" 
+          font-size="14" fill="#15803d" font-weight="bold">
+      Final Report
+    </text>
+    <text x="90" y="50" text-anchor="middle" font-family="Comic Sans MS, cursive" 
+          font-size="10" fill="#15803d">
+      (Comprehensive)
+    </text>
+  </g>
+  
+  <!-- Flow Arrows -->
+  <!-- User to Question Agent -->
+  <path d="M 280 160 Q 320 150 400 150" 
+        stroke="#2563eb" stroke-width="2.5" fill="none" 
+        marker-end="url(#arrowhead)" opacity="0.8"/>
+  
+  <!-- Question Agent to Questions -->
+  <path d="M 490 160 Q 500 180 450 220" 
+        stroke="#10b981" stroke-width="2.5" fill="none" 
+        marker-end="url(#arrowhead)" opacity="0.8"/>
+  
+  <!-- Questions to Answer Agents -->
+  <path d="M 400 300 Q 350 340 210 380" 
+        stroke="#ec4899" stroke-width="2.5" fill="none" 
+        marker-end="url(#arrowhead)" opacity="0.8"/>
+  <path d="M 430 300 Q 400 340 330 380" 
+        stroke="#ec4899" stroke-width="2.5" fill="none" 
+        marker-end="url(#arrowhead)" opacity="0.8"/>
+  <path d="M 460 300 Q 480 340 450 380" 
+        stroke="#ec4899" stroke-width="2.5" fill="none" 
+        marker-end="url(#arrowhead)" opacity="0.8"/>
+  
+  <!-- Answer Agents to Web Search -->
+  <path d="M 500 400 Q 550 380 650 380" 
+        stroke="#8b5cf6" stroke-width="2" fill="none" 
+        marker-end="url(#arrowhead)" opacity="0.8"/>
+  
+  <!-- Web Search back to Answer Agents -->
+  <path d="M 650 420 Q 550 440 500 420" 
+        stroke="#8b5cf6" stroke-width="2" fill="none" 
+        marker-end="url(#arrowhead)" opacity="0.8"/>
+  
+  <!-- Answer Agents to Collection -->
+  <path d="M 330 450 Q 320 480 325 520" 
+        stroke="#ea580c" stroke-width="2.5" fill="none" 
+        marker-end="url(#arrowhead)" opacity="0.8"/>
+  
+  <!-- Collection to Report Agent -->
+  <path d="M 500 550 Q 600 540 700 540" 
+        stroke="#0284c7" stroke-width="2.5" fill="none" 
+        marker-end="url(#arrowhead)" opacity="0.8"/>
+  
+  <!-- Report Agent to Final Report -->
+  <path d="M 790 550 Q 820 580 850 650" 
+        stroke="#16a34a" stroke-width="2.5" fill="none" 
+        marker-end="url(#arrowhead)" opacity="0.8"/>
+  
+  <!-- Technology Stack Box -->
+  <g transform="translate(950,120)">
+    <rect x="0" y="0" width="200" height="150" 
+          fill="#f9fafb" stroke="#374151" stroke-width="1.5" 
+          rx="8" ry="8" stroke-dasharray="3,2"
+          transform="rotate(-0.5)"/>
+    <text x="100" y="20" text-anchor="middle" font-family="Comic Sans MS, cursive" 
+          font-size="14" fill="#1f2937" font-weight="bold">
+      Tech Stack
+    </text>
+    
+    <text x="20" y="45" font-family="Comic Sans MS, cursive" 
+          font-size="11" fill="#374151" font-weight="bold">
+      • LlamaIndex
+    </text>
+    <text x="30" y="58" font-family="Comic Sans MS, cursive" 
+          font-size="9" fill="#6b7280">
+      Workflow Engine
+    </text>
+    
+    <text x="20" y="80" font-family="Comic Sans MS, cursive" 
+          font-size="11" fill="#374151" font-weight="bold">
+      • OpenAI GPT-4 Mini
+    </text>
+    <text x="30" y="93" font-family="Comic Sans MS, cursive" 
+          font-size="9" fill="#6b7280">
+      LLM for Agents
+    </text>
+    
+    <text x="20" y="115" font-family="Comic Sans MS, cursive" 
+          font-size="11" fill="#374151" font-weight="bold">
+      • Tavily API
+    </text>
+    <text x="30" y="128" font-family="Comic Sans MS, cursive" 
+          font-size="9" fill="#6b7280">
+      Web Search
+    </text>
+    
+
+  </g>
+  
+  <!-- Workflow Steps -->
+  <g transform="translate(80,650)">
+    <text x="0" y="15" font-family="Comic Sans MS, cursive" 
+          font-size="12" fill="#374151" font-weight="bold">
+      Workflow Steps:
+    </text>
+    <text x="0" y="35" font-family="Comic Sans MS, cursive" 
+          font-size="10" fill="#6b7280">
+      1. User provides research topic → 2. Generate questions → 3. Parallel answer research → 4. Collect answers → 5. Generate comprehensive report
+    </text>
+  </g>
+  
+  <!-- Hand-drawn style elements -->
+  <g opacity="0.1">
+    <path d="M 100 100 Q 200 80 300 120 Q 400 100 500 110" 
+          stroke="#9ca3af" stroke-width="1" fill="none"/>
+    <path d="M 600 200 Q 700 180 800 200 Q 900 220 1000 200" 
+          stroke="#9ca3af" stroke-width="1" fill="none"/>
+  </g>
+  
+  <!-- Small decorative sketches -->
+  <g opacity="0.3">
+    <circle cx="1050" cy="400" r="3" fill="#d1d5db"/>
+    <circle cx="1070" cy="420" r="2" fill="#d1d5db"/>
+    <circle cx="1090" cy="380" r="4" fill="#d1d5db"/>
+  </g>
+</svg>
