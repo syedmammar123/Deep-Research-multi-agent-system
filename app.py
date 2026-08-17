@@ -2,34 +2,55 @@ import logging
 import os
 from datetime import datetime
 
-from flask import Flask, Response, jsonify, make_response, render_template, request
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
 from research import ResearchState, research_graph
 from research.events import error_event, sse
 
 logger = logging.getLogger(__name__)
 
-app = Flask(__name__)
+app = FastAPI(title="Deep Research Multi-Agent System")
 
-app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
 
 
-@app.route("/")
-def index():
-    response = make_response(render_template("index.html"))
-    response.headers["Cache-Control"] = "no-store"
+@app.middleware("http")
+async def no_store(request: Request, call_next):
+    """Caching is disabled in both directions: a cached app.js otherwise runs
+    stale code against a changed backend."""
+    response = await call_next(request)
+    if request.url.path == "/" or request.url.path.startswith("/static"):
+        response.headers["Cache-Control"] = "no-store"
     return response
 
 
-@app.route("/start_research", methods=["POST"])
-def start_research():
-    topic = (request.get_json() or {}).get("topic")
-    if not topic:
-        return jsonify({"success": False, "message": "Please enter a research topic"})
+@app.get("/")
+async def index(request: Request):
+    return templates.TemplateResponse(request, "index.html")
 
-    return Response(
+
+@app.post("/start_research")
+async def start_research(request: Request):
+    try:
+        payload = await request.json()
+    except Exception:
+        payload = None
+
+    topic = (payload or {}).get("topic") if isinstance(payload, dict) else None
+    if not topic:
+        
+        return JSONResponse(
+            {"success": False, "message": "Please enter a research topic"}
+        )
+
+   
+    return StreamingResponse(
         research_events(topic),
-        mimetype="text/event-stream",
+        media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
             "X-Accel-Buffering": "no",
@@ -81,5 +102,7 @@ def research_events(topic: str):
 
 
 if __name__ == "__main__":
+    import uvicorn
+
     port = int(os.environ.get("PORT", 5000))
-    app.run(debug=False, host="0.0.0.0", port=port)
+    uvicorn.run(app, host="0.0.0.0", port=port)

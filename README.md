@@ -1,6 +1,6 @@
 # Deep Research Agent
 
-A Flask app that turns a research topic into a cited markdown report. It plans its own questions, researches them in parallel against live web search, and writes a report where every claim links back to the page it came from.
+A FastAPI app that turns a research topic into a cited markdown report. It plans its own questions, researches them in parallel against live web search, and writes a report where every claim links back to the page it came from.
 
 ![Demo Video](demo-video.gif)
 
@@ -45,7 +45,7 @@ write_report
 The fan-out is real concurrency, not a loop: LangGraph runs the branches on a thread pool, and since both the Tavily and Groq calls are blocking network I/O they overlap in wall clock time. Branches finish out of order, so each answer carries its question index and is sorted back into place before the report is written.
 
 ```
-app.py                Flask routes and the SSE endpoint. Web layer only.
+app.py                FastAPI routes and the SSE endpoint. Web layer only.
 research/
   config.py           env loading, fail fast key validation, the shared LLM client
   resilience.py       tenacity retry policies for Groq and Tavily
@@ -80,14 +80,14 @@ Copy `.env.example` to `.env` and fill in two keys:
 `GROQ_MODEL` is optional and defaults to `openai/gpt-oss-20b`. Both keys are validated at import, so a bad `.env` fails at startup instead of several minutes into a run.
 
 ```bash
-python app.py
+python app.py                              # or: uvicorn app:app --port 5000
 ```
 
 Then open `http://localhost:5000`. A full report takes roughly 3 to 4 minutes.
 
 ## Tech
 
-Flask, LangGraph, Groq, Tavily, tenacity, and vanilla JavaScript with marked.js for rendering. No frontend build step.
+FastAPI, uvicorn, LangGraph, Groq, Tavily, tenacity, and vanilla JavaScript with marked.js for rendering. No frontend build step.
 
 ## Notes
 
